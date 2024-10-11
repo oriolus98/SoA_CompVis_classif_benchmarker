@@ -2,7 +2,7 @@ import os
 import numpy as np
 import logging
 from datetime import datetime as dt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -69,7 +69,9 @@ class TrainModels:
         self.history = model.fit(self.train_generator, epochs=self.num_epochs, validation_data=self.validation_generator, callbacks=[model_checkpoint])
 
         self.save_learning_curves()
-        self.summary_statistics()
+        test_metrics = self.summary_statistics()
+
+        return test_metrics
 
 
 
@@ -153,10 +155,37 @@ class TrainModels:
         best_model = load_model(self.check_path)
         test_loss, test_accuracy = best_model.evaluate(self.test_generator)
         logging.info('Test Accuracy: {}'.format(test_accuracy))
-        
-        # Confussion matrix
+
+        # classification repport
+        y_true = self.test_generator.classes
+
+
         predictions = best_model.predict(self.test_generator)
         predicted_classes = np.argmax(predictions, axis=1)
+        cr = classification_report(y_true, predicted_classes, target_names= self.test_generator.class_indices.keys())
+
+        metrics = {}
+        class_metrics = []
+
+        for class_name, class_dict in cr.items():
+            if isinstance(class_dict, dict) and class_name not in ['accuracy', 'macro avg', 'weighted avg']:
+                metrics[class_name] = {
+                    'precision': class_dict['precision'],
+                    'recall': class_dict['recall'],
+                    'f1-score': class_dict['f1-score']
+                }
+                class_metrics.append(metrics[class_name])
+
+        macro_avg = {
+            'accuracy': test_accuracy,
+            'precision': sum(m['precision'] for m in class_metrics) / len(class_metrics),
+            'recall': sum(m['recall'] for m in class_metrics) / len(class_metrics),
+            'f1-score': sum(m['f1-score'] for m in class_metrics) / len(class_metrics),
+            'transfer learning': self.do_transfer,
+            'epochs': self.num_epochs
+        }
+        
+        # Confussion matrix
         true_classes = self.test_generator.classes
         class_labels = list(self.test_generator.class_indices.keys())
 
@@ -188,6 +217,8 @@ class TrainModels:
 
         plt.tight_layout()
         plt.savefig(os.path.join(self.figures_path, self.app_name + '_conf_matrix.png'))
+
+        return macro_avg
 
 
     def logging_conf(self):

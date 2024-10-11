@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import logging
 import json
 from datetime import datetime as dt
@@ -42,19 +43,16 @@ def main():
 
     check = CheckImages(datasets)
     corr_images = check.count_corrupt_images()
-    print('{} corrupt images found'.format(corr_images))
+
+    if corr_images:
+        raise FileNotFoundError('{} corrupt images found'.format(corr_images))
+        exit(1)
     
-    """
-    if corr_images > 30:
-        print('It seems there is a problem with your dataset! Check it and start again.'):
-        break
-    elif (corr_images > 0) and (corr_images < 30):
-        check.delete_corrupt_images()
-    """
 
     with open('model_config.json', 'r') as f:
         config = json.load(f)
 
+    results = {}
 
     for model_name, model_info in config['models'].items():
         model_module_path = model_info['model']
@@ -75,8 +73,12 @@ def main():
         preprocessor_class = getattr(module, class_name)
         
         mod = TrainModels(app_name = model_name, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, paths = paths, do_transfer = do_transfer)
-        mod.train()
+        results[model_name] = mod.train()
     
+        df = pd.DataFrame.from_dict(results, orient='index')
+        df.index.name = 'model'
+        df.reset_index(inplace=True)
+        df.to_csv('./results/test_metrics.csv', index=False)
 
 
 if __name__ == "__main__":

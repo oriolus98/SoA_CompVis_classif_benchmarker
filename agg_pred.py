@@ -17,7 +17,7 @@ from utils.tools import AggregatePredictions
 
 
 # Directory containing the images
-images_dir = 'datasets/final-vrain/test/'
+images_dir = 'dataset/test/'
 log_path = 'results/logs/aggregate_metrics'
 
 if not os.path.isdir(log_path):

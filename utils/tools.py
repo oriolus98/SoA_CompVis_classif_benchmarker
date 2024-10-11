@@ -49,153 +49,8 @@ class CheckImages:
 
 
 
-class ShadowAugmentor:
-    """
-        Adds random elliptical, rectangular and triangle shadows to a fraction of the dataset
-
-        THIS CLASS IS NOT TESTED YET
-    """
-    def __init__(self, input_dir, output_dir, n_shadows = 5, p = 0.5):
-        self.n_shadows = n_shadows
-        self.input_dir = input_dir
-        self.output_dir = output_dir
-        self.fraction = p
-
-
-    def process_dataset(self):
-        """
-        Process the entire dataset by adding shadows to each image.
-        """
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-
-        image_files = os.listdir(self.input_dir)
-        num_images = len(image_files)
-        num_images_to_process = int(self.fraction * num_images)
-        selected_files = np.random.choice(image_files, num_images_to_process, replace=False)
-
-        for filename in selected_files:
-            if filename.endswith(('.jpg', '.jpeg', '.png')):  # Process only image files
-                image_path = os.path.join(self.input_dir, filename)
-                image = Image.open(image_path)
-                self.add_shadows(image, image_path)
-
-
-
-    def add_shadows(self, image, image_path):
-        tr_shadows = np.random.randint(0, self.n_shadows)
-        rec_shadows = np.random.randint(0, self.n_shadows)
-        elip_shadows = np.random.randint(0, self.n_shadows)
-
-        shaded_image = image
-
-        for i in range(tr_shadows):
-            shaded_image = self.add_triangular_shadow(shaded_image)
-        
-        for i in range(rec_shadows):
-            shaded_image = self.add_rectangular_shadow(shaded_image)
-        
-        for i in range(tr_shadows):
-            shaded_image = self.add_elliptical_shadow(shaded_image)
-        
-
-        filename = os.path.splitext(os.path.basename(image_path))[0]
-        # Save the image with shadow
-        output_path = os.path.join(self.output_dir, f"{filename}_shadow.png")
-        shaded_image.save(output_path)
-        # return shaded_image
-    
-
-    @staticmethod
-    def add_rectangular_shadow(image):
-        """
-        Add rectangula shadow to an image.
-        """
-        width, height = 225, 225
-        
-        shadow = Image.new('RGBA', (width, height))
-
-        # Generate random shadow coordinates
-        x1, y1 = np.random.randint(0, width), np.random.randint(0, height)
-        x2, y2 = np.random.randint(x1, width), np.random.randint(y1, height)
-        
-        # Generate random shadow intensity
-        intensity = int(np.random.randint(50,150))
-
-
-        for x in range(x1, x2):
-            for y in range(y1, y2):
-                # Define the color for the pixel (x, y)
-                color = (0, 0, 0, intensity)
-                shadow.putpixel((x, y), color) # mask
-
-        image_with_shadow = Image.alpha_composite(image.convert('RGBA'), shadow)
-        return image_with_shadow.convert('RGB')
-    
-
-    @staticmethod
-    def add_elliptical_shadow(image):
-        """
-        Add elliptical shadow to an image.
-        """
-        width, height = 225, 225
-        
-        shadow = Image.new('RGBA', (width, height))
-
-        # Generate random shadow parameters
-        x_center, y_center = np.random.randint(0, width), np.random.randint(0, height)
-        a = np.random.randint(20, 60)  # major axis
-        b = np.random.randint(10, 30)   # minor axis
-
-        # Generate random shadow intensity
-        intensity = int(np.random.randint(50, 150))
-
-        # Create an elliptical mask
-        mask = Image.new('L', (width, height), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((x_center - a, y_center - b, x_center + a, y_center + b), fill=intensity)
-
-        # Paste the shadow onto the shadow image
-        shadow.putalpha(mask)
-
-        image_with_shadow = Image.alpha_composite(image.convert('RGBA'), shadow)
-        return image_with_shadow.convert('RGB')
-    
-
-    @staticmethod
-    def add_triangular_shadow(image):
-        """
-        Add triangular shadow to an image.
-        """
-        width, height = 225, 225
-        
-        shadow = Image.new('RGBA', (width, height))
-
-        # Generate random shadow parameters
-        x1, y1 = np.random.randint(0, width), np.random.randint(0, height)
-        x2, y2 = np.random.randint(0, width), np.random.randint(0, height)
-        x3, y3 = np.random.randint(0, width), np.random.randint(0, height)
-
-        # Generate random shadow intensity
-        intensity = int(np.random.randint(50, 150))
-
-        # Create a triangular mask
-        mask = Image.new('L', (width, height), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=intensity)
-
-        # Paste the shadow onto the shadow image
-        shadow.putalpha(mask)
-
-        image_with_shadow = Image.alpha_composite(image.convert('RGBA'), shadow)
-        return image_with_shadow.convert('RGB')
-
-    
-
-
 class AggregatePredictions:
     """
-        @author: Cédric Marco Detchart (VRAIN).
         Aggregate predictions from different models into a single predictions array with a single probability for each class 
         Implemented metrics are: ["min", "max", "mean", "choquet", "sugeno", "owa"]
     """
@@ -266,3 +121,7 @@ class AggregatePredictions:
         q[x > b] = 1
 
         return q
+    
+
+
+
