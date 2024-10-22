@@ -77,6 +77,12 @@
             "preprocess_function": "tensorflow.keras.applications.nasnet.preprocess_input",
             "num_epochs": 8,
             "transfer_learning": true
+        },
+        "Xception_no_tr": {
+            "model": "tensorflow.keras.applications.Xception",
+            "preprocess_function": "tensorflow.keras.applications.xception.preprocess_input",
+            "num_epochs": 200,
+            "transfer_learning": false
         }
     }
 }

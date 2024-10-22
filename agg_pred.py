@@ -14,6 +14,7 @@ import tensorflow as tf
 import tensorflow.keras.applications as apps
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from utils.tools import AggregatePredictions
+import pandas as pd
 
 
 # Directory containing the images
@@ -36,7 +37,7 @@ logging.basicConfig(
 )
 
 true_labels = []
-class_labels = ['SIGRE','blue','green','green_point','grey','yellow']
+class_labels = os.listdir(images_dir)
 for subdir in class_labels:
     files = os.listdir(os.path.join(images_dir, subdir))
     true_labels.extend([class_labels.index(subdir)] * len(files))
@@ -73,6 +74,10 @@ image_generator = datagen.flow_from_directory(
 )
 
 metrics = ['min', 'max','mean', 'sugeno', 'choquet','owa']
+
+acc = []
+prec = []
+rec = []
 
 for metric in metrics:
     count = 0
@@ -133,5 +138,11 @@ for metric in metrics:
     
     logging.info('Aggregation metric: {}'.format(metric))
     logging.info('MoE accuracy: {}%'.format(accuracy))
+    acc.append(accuracy)
     logging.info('Average Precision: {}'.format(average_precision))
+    prec.append(average_precision)
     logging.info('Average Recall: {}'.format(average_recall))
+    rec.append(average_recall)
+
+results = pd.DataFrame({'Aggregation function': metrics, 'Accuracy': acc, 'Precission': prec, 'Recall': rec})
+results.to_csv('./results/aggregate_benchmark.csv', index=False)
