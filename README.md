@@ -4,6 +4,7 @@ When dealing with an image classification new problem, sometimes we need to comp
 
 The images dataset must be divided into train, test and validation subfolders within 'dataset/', following the defined structure:
 
+```bash
 .
 ├── README.md
 ├── dataset
@@ -18,7 +19,7 @@ The images dataset must be divided into train, test and validation subfolders wi
 │       ├── class1/
 │       └── ...
 └── ...
-
+```
 where 'class1' has to be substituted by the label of the first class etc.
 
 All Computer vision models must be defined in 'model_config.json', including number of epochs, if transfer learning should be applied etc. Selected hyperparameters, along different obtained metrics on the validation dataset for each model are saved on 'results/test_metrics.csv'. Also training curves and confusion matrices are saved in 'results/'. Trained models will be saved on 'models/'.
