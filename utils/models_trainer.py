@@ -12,8 +12,8 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 
-class TrainModels:
-    def __init__(self, app_name, feature_extractor, preprocessor, datasets, epochs, batch_size, inp_size, paths, path_to_trained_model = None, do_transfer = False):
+class TrainModelsTF:
+    def __init__(self, app_name, feature_extractor, preprocessor, datasets, epochs, batch_size, inp_size, paths, learning_rate = 0.001, path_to_trained_model = None, do_transfer = False):
         self.train_data_dir = datasets[0]
         self.validation_data_dir = datasets[1]
         self.test_data_dir = datasets[2]
@@ -25,6 +25,7 @@ class TrainModels:
         self.log_path = paths[0]
         self.model_path = paths[1]
         self.figures_path = paths[2]
+        self.lr = learning_rate
         self.path_to_trained_model = path_to_trained_model
         self.do_transfer = do_transfer
 
@@ -58,7 +59,7 @@ class TrainModels:
         ])
 
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=self.lr),
             loss='categorical_crossentropy',
             metrics=['accuracy'])
 

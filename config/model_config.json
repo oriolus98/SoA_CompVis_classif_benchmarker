@@ -1,87 +1,179 @@
 {
-    "models": {
+    "torch": {
+        "EfficientNetV2L": {
+            "model": "torchvision.models.efficientnet_v2_l",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        },
+        "EfficientNetV2M": {
+            "model": "torchvision.models.efficientnet_v2_m",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 128,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        },
+        "EfficientNetV2S": {
+            "model": "torchvision.models.efficientnet_v2_s",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 256,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        },
+        "MobileNetV3_Large": {
+            "model": "torchvision.models.mobilenet_v3_large",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        },
+        "MobileNetV3_Small": {
+            "model": "torchvision.models.mobilenet_v3_small",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        },
+        "VGG19": {
+            "model": "torchvision.models.vgg19",
+            "num_epochs": 12,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
+            "transfer_learning": true
+        }
+    },
+    "tensorflow": {
         "EfficientNetV2B0": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2B0",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2B1": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2B1",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2B2": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2B2",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2B3": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2B3",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2L": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2L",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2M": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2M",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "EfficientNetV2S": {
             "model": "tensorflow.keras.applications.efficientnet_v2.EfficientNetV2S",
             "preprocess_function": "tensorflow.keras.applications.efficientnet_v2.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "Xception": {
             "model": "tensorflow.keras.applications.Xception",
             "preprocess_function": "tensorflow.keras.applications.xception.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "MobileNetV3_Large": {
             "model": "tensorflow.keras.applications.MobileNetV3Large",
             "preprocess_function": "tensorflow.keras.applications.mobilenet_v3.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "MobileNetV3_Small": {
             "model": "tensorflow.keras.applications.MobileNetV3Small",
             "preprocess_function": "tensorflow.keras.applications.mobilenet_v3.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "InceptionV3": {
             "model": "tensorflow.keras.applications.InceptionV3",
             "preprocess_function": "tensorflow.keras.applications.inception_v3.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "NasNet_Large": {
             "model": "tensorflow.keras.applications.nasnet.NASNetLarge",
             "preprocess_function": "tensorflow.keras.applications.nasnet.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "NasNet_Mobile": {
             "model": "tensorflow.keras.applications.nasnet.NASNetMobile",
             "preprocess_function": "tensorflow.keras.applications.nasnet.preprocess_input",
             "num_epochs": 8,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": true
         },
         "Xception_no_tr": {
             "model": "tensorflow.keras.applications.Xception",
             "preprocess_function": "tensorflow.keras.applications.xception.preprocess_input",
             "num_epochs": 200,
+            "input_size": 224,
+            "batch_size": 64,
+            "learning_rate": 0.001,
             "transfer_learning": false
         }
     }
