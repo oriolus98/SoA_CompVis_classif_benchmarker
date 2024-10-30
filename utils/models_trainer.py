@@ -11,9 +11,8 @@ from keras.models import load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-
 class TrainModelsTF:
-    def __init__(self, app_name, feature_extractor, preprocessor, datasets, epochs, batch_size, inp_size, paths, learning_rate = 0.001, path_to_trained_model = None, do_transfer = False):
+    def __init__(self, app_name, feature_extractor, preprocessor, datasets, epochs, batch_size, inp_size, results_path, learning_rate = 0.001, path_to_trained_model = None, do_transfer = False):
         self.train_data_dir = datasets[0]
         self.validation_data_dir = datasets[1]
         self.test_data_dir = datasets[2]
@@ -22,9 +21,7 @@ class TrainModelsTF:
         self.num_epochs = epochs
         self.batch_size = batch_size
         self.input_size = inp_size
-        self.log_path = paths[0]
-        self.model_path = paths[1]
-        self.figures_path = paths[2]
+        self.results_path = results_path
         self.lr = learning_rate
         self.path_to_trained_model = path_to_trained_model
         self.do_transfer = do_transfer
@@ -40,7 +37,8 @@ class TrainModelsTF:
     def train(self):
         self.preprocess_dataset()
 
-        logging.info('Loading model:  {}'.format(self.app_name))
+        logging.info('Experiment:  {}'.format(self.app_name))
+        logging.info('Loading model:  {}'.format(self.feature_extractor.__name__))
         inputs = layers.Input(shape = (224,224,3))
 
         if self.do_transfer:
@@ -64,7 +62,7 @@ class TrainModelsTF:
             metrics=['accuracy'])
 
 
-        self.check_path = os.path.join(self.model_path, self.app_name + '.h5')
+        self.check_path = os.path.join(self.results_path, self.app_name, + 'best_model.h5')
         model_checkpoint = ModelCheckpoint(self.check_path, monitor='val_accuracy', mode='max', save_best_only=True)
         # Train the model
         self.history = model.fit(self.train_generator, epochs=self.num_epochs, validation_data=self.validation_generator, callbacks=[model_checkpoint])
@@ -140,7 +138,7 @@ class TrainModelsTF:
         plt.ylabel("Loss (training and validation)")
         plt.xlabel("Training Steps")
         plt.tight_layout()
-        plt.savefig(os.path.join(self.figures_path, self.app_name + '_acc_and_val.png'))
+        plt.savefig(os.path.join(self.results_path, self.app_name,  'training_curves.png'))
 
         logging.info('Learning curve figures saved')
 
@@ -217,14 +215,14 @@ class TrainModelsTF:
         plt.ylabel('True Label', fontsize=12)  # Increase y-axis label font size
 
         plt.tight_layout()
-        plt.savefig(os.path.join(self.figures_path, self.app_name + '_conf_matrix.png'))
+        plt.savefig(os.path.join(self.results_path, self.app_name, 'conf_matrix.png'))
 
         return macro_avg
 
 
     def logging_conf(self):
-        if not os.path.isdir(os.path.join(self.log_path, self.app_name)):
-            os.mkdir(os.path.join(self.log_path, self.app_name))
+        if not os.path.isdir(os.path.join(self.results_path, self.app_name)):
+            os.makedirs(os.path.join(self.results_path, self.app_name))
 
         filename = dt.today().strftime('%y%m%d')  + '.log'
 
@@ -233,7 +231,7 @@ class TrainModelsTF:
             format='%(levelname)s - %(asctime)s - %(message)s',
 
             handlers=[
-                logging.FileHandler(os.path.join(self.log_path, self.app_name, filename)),
+                logging.FileHandler(os.path.join(self.results_path, self.app_name, filename)),
                 logging.StreamHandler()
             ]
         )

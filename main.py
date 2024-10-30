@@ -6,33 +6,24 @@ import json
 from datetime import datetime as dt
 import importlib
 from utils.tools import CheckImages
-from utils.models_trainer import TrainModelsTF, TrainModelsTorch
+from utils.models_trainer import TrainModelsTF
+from utils.torch_trainer import TrainModelsTorch
 
 
 
 def main():
     framework = 'torch'
-    # Configure results directories
-    log_path = 'results/logs' 
-    model_path = 'results/models'
-    figures_path = 'results/figures'
 
-    if not os.path.isdir(model_path):
-        os.makedirs(model_path)
+    results_path = os.path.join('results',framework)
 
-    if not os.path.isdir(figures_path):
-        os.makedirs(figures_path)
-
-    if not os.path.isdir(log_path):
-        os.makedirs(log_path)
-
+    if not os.path.isdir(results_path):
+        os.makedirs(results_path)
 
     # Define paths to images dataset
     train_data_dir = 'dataset/train'
     validation_data_dir = 'dataset/validation'
     test_data_dir = 'dataset/test'
 
-    paths = [log_path, model_path, figures_path]
     # check for corrupt images (in the first test some corrupt images at the dataset stopped training)
     datasets = [train_data_dir, validation_data_dir, test_data_dir]
 
@@ -49,7 +40,7 @@ def main():
 
     results = {}
 
-    for model_name, model_info in config[framework].items():
+    for experiment, model_info in config[framework].items():
         model_module_path = model_info['model']
         n_epochs = model_info['num_epochs']
         do_transfer = model_info['transfer_learning']
@@ -71,18 +62,19 @@ def main():
             # Get the model class from the module
             preprocessor_class = getattr(module, class_name)
 
-            mod = TrainModelsTF(app_name = model_name, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, learning_rate = lr, paths = paths, do_transfer = do_transfer)
-            results[model_name] = mod.train()
+            mod = TrainModelsTF(app_name = experiment, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, learning_rate = lr, results_path = results_path, do_transfer = do_transfer)
+            results[experiment] = mod.train()
 
         elif framework == 'torch':
             preprocessor_class = None
+            hid_size = model_info['hidden_size']
 
-            mod = TrainModelsTorch(app_name = model_name, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, learning_rate = lr, paths = paths, do_transfer = do_transfer)
-            results[model_name] = mod.train()
+            mod = TrainModelsTorch(app_name = experiment, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, hid_size = hid_size, learning_rate = lr, results_path = results_path, do_transfer = do_transfer)
+            results[experiment] = mod.train()
         
     
         df = pd.DataFrame.from_dict(results, orient='index')
-        df.index.name = 'model'
+        df.index.name = 'Experiment'
         df.reset_index(inplace=True)
         df.to_csv('./results/test_metrics.csv', index=False)
 
