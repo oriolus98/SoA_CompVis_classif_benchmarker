@@ -12,7 +12,65 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 class TrainModelsTF:
-    def __init__(self, app_name, feature_extractor, preprocessor, datasets, epochs, batch_size, inp_size, results_path, learning_rate = 0.001, path_to_trained_model = None, do_transfer = False):
+    """
+        A class to train TensorFlow models using transfer learning and standard training configurations.
+        It receives a given architecture and a choice of hyperparameters and produces a training and performance
+        repport and saves the best performing model.
+
+        Attributes
+        ----------
+        train_data_dir : str
+            Directory path to the training dataset.
+        validation_data_dir : str
+            Directory path to the validation dataset.
+        test_data_dir : str
+            Directory path to the test dataset.
+        feature_extractor : function
+            Base feature extractor model.
+        preprocessor : function
+            Tensorflow function for preprocessing images (must be compatible with the model).
+        num_epochs : int
+            Number of epochs for training.
+        batch_size : int
+            Batch size for data loading.
+        input_size : tuple
+            Dimensions (width, height) for resizing images.
+        results_path : str
+            Path to save results, models, and logs.
+        lr : float, optional
+            Learning rate for the optimizer (default is 0.001).
+        do_transfer : bool, optional
+            Indicates whether to use transfer learning (default is True).
+        app_name : str
+            Name of the application/model for experiment tracking.
+
+        Methods
+        -------
+        train():
+            Compiles, trains, and evaluates the model, saving the best model and learning curves.
+        preprocess_dataset():
+            Prepares the data generators for training, validation, and testing.
+        save_learning_curves():
+            Plots and saves training and validation accuracy/loss curves.
+        summary_statistics():
+            Evaluates the trained model on the test dataset, returning test metrics and confusion matrix.
+        logging_conf():
+            Configures logging for experiment tracking.
+    """
+    
+    def __init__(
+        self, 
+        app_name: str, 
+        feature_extractor: callable, 
+        preprocessor: callable, 
+        datasets: list[str], 
+        epochs: int, 
+        batch_size: int, 
+        inp_size: tuple[int, int], 
+        results_path: str, 
+        learning_rate: float = 0.001,  
+        do_transfer: bool = True
+    ):
         self.train_data_dir = datasets[0]
         self.validation_data_dir = datasets[1]
         self.test_data_dir = datasets[2]
@@ -23,23 +81,29 @@ class TrainModelsTF:
         self.input_size = inp_size
         self.results_path = results_path
         self.lr = learning_rate
-        self.path_to_trained_model = path_to_trained_model
         self.do_transfer = do_transfer
 
-        if self.do_transfer:
-            self.app_name = app_name + '_transfer'
-        else:
-            self.app_name = app_name
 
         self.logging_conf()
 
 
     def train(self):
+        """
+            Preprocesses the dataset, compiles, trains, and evaluates the model. Saves the best model
+            and plots the training curves.
+
+            Returns
+            -------
+            dict
+                Test metrics such as accuracy, precision, recall, and F1 score, along used model and hyperparameters.
+        """
         self.preprocess_dataset()
 
         logging.info('Experiment:  {}'.format(self.app_name))
         logging.info('Loading model:  {}'.format(self.feature_extractor.__name__))
-        inputs = layers.Input(shape = (224,224,3))
+        self.preprocess_dataset()
+
+        inputs = layers.Input(shape = (self.input_size[0],self.input_size[1],3))
 
         if self.do_transfer:
             base_model = self.feature_extractor(weights = 'imagenet', include_top = False, input_tensor = inputs)
@@ -75,6 +139,9 @@ class TrainModelsTF:
 
 
     def preprocess_dataset(self):
+        """
+            Initializes data generators for training, validation, and testing datasets, adds random data augmentation
+        """
         # Data preprocessing (images must not be previously rescaled, as models preprocessors already implement it)
         train_datagen = ImageDataGenerator(
             shear_range=0.2,
@@ -112,7 +179,9 @@ class TrainModelsTF:
 
 
     def save_learning_curves(self):
-        # plot and save accuracy and loss evolution
+        """
+            Plots and saves the training and validation accuracy and loss curves to the results directory.
+        """
         acc = self.history.history['accuracy']
         val_acc = self.history.history['val_accuracy']
 
@@ -143,8 +212,20 @@ class TrainModelsTF:
         logging.info('Learning curve figures saved')
 
 
-    def summary_statistics(self):
+    def summary_statistics(self, path_to_trained_model: str = None):
+        """
+            Evaluates the model on the test dataset, calculates test metrics and confusion matrix, and saves them.
 
+            Parameters
+            -------
+            path_to_trained_model : str, optional
+                Path to a pre-trained model for further evaluation (default is None).
+
+            Returns
+            -------
+            dict
+                Test accuracy, precision, recall, and F1 score, along with additional model info.
+        """
         # if used separately to summary a trained model, load model and dataset, else used in the hole pipeline in .train()
         if self.path_to_trained_model:
             self.check_path = self.path_to_trained_model
@@ -161,7 +242,7 @@ class TrainModelsTF:
 
         predictions = best_model.predict(self.test_generator)
         predicted_classes = np.argmax(predictions, axis=1)
-        cr = classification_report(y_true, predicted_classes, target_names= self.test_generator.class_indices.keys())
+        cr = classification_report(y_true, predicted_classes, target_names= self.test_generator.class_indices.keys(), output_dict=True)
 
         metrics = {}
         class_metrics = []
@@ -221,6 +302,9 @@ class TrainModelsTF:
 
 
     def logging_conf(self):
+        """
+            Configures logging for experiment tracking.
+        """
         if not os.path.isdir(os.path.join(self.results_path, self.app_name)):
             os.makedirs(os.path.join(self.results_path, self.app_name))
 

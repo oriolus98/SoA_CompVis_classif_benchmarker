@@ -1,0 +1,16 @@
+# folders
+dataset/
+
+# byte-compiled
+__pycache__/
+*.pyc
+
+# models
+*.h5
+*.pth
+
+# figures
+*.png
+
+# slurm
+slurm*

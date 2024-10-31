@@ -6,8 +6,6 @@ import json
 from datetime import datetime as dt
 import importlib
 from utils.tools import CheckImages
-from utils.models_trainer import TrainModelsTF
-from utils.torch_trainer import TrainModelsTorch
 
 
 
@@ -21,7 +19,7 @@ def main():
 
     # Define paths to images dataset
     train_data_dir = 'dataset/train'
-    validation_data_dir = 'dataset/validation'
+    validation_data_dir = 'dataset/valid'
     test_data_dir = 'dataset/test'
 
     # check for corrupt images (in the first test some corrupt images at the dataset stopped training)
@@ -55,6 +53,7 @@ def main():
         model_class = getattr(module, class_name)
 
         if framework == 'tensorflow':
+            from utils.models_trainer import TrainModelsTF
             preprocess_path = model_info['preprocess_function']
             # Dynamically import the preprocessor module
             prep_path, class_name = preprocess_path.rsplit('.', 1)
@@ -66,17 +65,18 @@ def main():
             results[experiment] = mod.train()
 
         elif framework == 'torch':
+            from utils.torch_trainer import TrainModelsTorch
             preprocessor_class = None
             hid_size = model_info['hidden_size']
 
-            mod = TrainModelsTorch(app_name = experiment, feature_extractor = model_class, preprocessor = preprocessor_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, hid_size = hid_size, learning_rate = lr, results_path = results_path, do_transfer = do_transfer)
+            mod = TrainModelsTorch(app_name = experiment, feature_extractor = model_class, datasets = datasets, epochs = n_epochs, batch_size = batch_size, inp_size = input_size, hid_size = hid_size, learning_rate = lr, results_path = results_path, do_transfer = do_transfer)
             results[experiment] = mod.train()
         
     
         df = pd.DataFrame.from_dict(results, orient='index')
         df.index.name = 'Experiment'
         df.reset_index(inplace=True)
-        df.to_csv('./results/test_metrics.csv', index=False)
+        df.to_csv(os.path.join(results_path, 'test_metrics.csv'), index=False)
 
 
 if __name__ == "__main__":
