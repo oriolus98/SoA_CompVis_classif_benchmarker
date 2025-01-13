@@ -1,6 +1,6 @@
 # Custom Image Classification Benchmarker
 
-This repository provides a simple and efficient way to benchmark and compare the performance of state-of-the-art image classification models on a custom dataset. It supports both TensorFlow and PyTorch frameworks, making it a versatile tool for experimenting with different deep learning architectures. 
+This repository provides a simple and efficient way to benchmark and compare the performance of state-of-the-art image classification models on a custom dataset. It supports both TensorFlow and PyTorch frameworks, making it a versatile tool for experimenting with different deep learning architectures. It also provides tools for the aggregation of different trained models predictions, in order to achieve a more reliable classification.
 
 ## Features
 
@@ -54,6 +54,10 @@ Replace `class1`, `class2`, etc., with the actual class labels of your dataset.
    ```bash
    pip install -r requirements.txt
    ```
+
+**Note**: PyTorch is not included in `requirements.txt`.  
+Please follow the installation instructions at [PyTorch's official website](https://pytorch.org/get-started/locally/) to install the appropriate version for your system in case you prefer this framework.  
+
 
 ### 2. Configuration
 
@@ -147,7 +151,7 @@ Here is an example workflow:
 - Python 3.9+
 - TensorFlow 2.x
 - PyTorch 2.x
-- GPU (recommended for faster training)
+- GPU (highly recommended for faster training)
 
 Install all dependencies using the provided `requirements.txt` file.
 
