@@ -82,6 +82,7 @@ class TrainModelsTF:
         self.results_path = results_path
         self.lr = learning_rate
         self.do_transfer = do_transfer
+        self.app_name = app_name
 
 
         self.logging_conf()
