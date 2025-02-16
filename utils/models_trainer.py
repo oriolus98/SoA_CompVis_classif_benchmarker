@@ -127,7 +127,7 @@ class TrainModelsTF:
             metrics=['accuracy'])
 
 
-        self.check_path = os.path.join(self.results_path, self.app_name, + 'best_model.h5')
+        self.check_path = os.path.join(self.results_path, self.app_name, 'best_model.h5')
         model_checkpoint = ModelCheckpoint(self.check_path, monitor='val_accuracy', mode='max', save_best_only=True)
         # Train the model
         self.history = model.fit(self.train_generator, epochs=self.num_epochs, validation_data=self.validation_generator, callbacks=[model_checkpoint])
