@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --gpus=2
 
-source ~/miniconda3/bin/activate torch_env
+source ~/miniconda3/bin/activate reciclai2
 
 python3 main.py

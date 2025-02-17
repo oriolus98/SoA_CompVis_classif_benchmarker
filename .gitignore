@@ -1,5 +1,7 @@
 # folders
 dataset/
+data/
+results/
 
 # byte-compiled
 __pycache__/

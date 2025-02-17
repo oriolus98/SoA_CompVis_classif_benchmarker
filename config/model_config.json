@@ -172,15 +172,6 @@
             "batch_size": 64,
             "learning_rate": 0.001,
             "transfer_learning": true
-        },
-        "Experiment20": {
-            "model": "tensorflow.keras.applications.Xception",
-            "preprocess_function": "tensorflow.keras.applications.xception.preprocess_input",
-            "num_epochs": 200,
-            "input_size": 224,
-            "batch_size": 64,
-            "learning_rate": 0.001,
-            "transfer_learning": false
         }
     }
 }

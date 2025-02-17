@@ -228,8 +228,8 @@ class TrainModelsTF:
                 Test accuracy, precision, recall, and F1 score, along with additional model info.
         """
         # if used separately to summary a trained model, load model and dataset, else used in the hole pipeline in .train()
-        if self.path_to_trained_model:
-            self.check_path = self.path_to_trained_model
+        if path_to_trained_model:
+            self.check_path = path_to_trained_model
             self.preprocess_dataset()
 
         # Evaluate the model on the test set

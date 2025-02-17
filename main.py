@@ -10,7 +10,7 @@ from utils.tools import CheckImages
 
 
 def main():
-    framework = 'torch'
+    framework = 'tensorflow'
 
     results_path = os.path.join('results',framework)
 
@@ -18,9 +18,9 @@ def main():
         os.makedirs(results_path)
 
     # Define paths to images dataset
-    train_data_dir = 'dataset/train'
-    validation_data_dir = 'dataset/valid'
-    test_data_dir = 'dataset/test'
+    train_data_dir = 'data/train'
+    validation_data_dir = 'data/valid'
+    test_data_dir = 'data/test'
 
     # check for corrupt images (in the first test some corrupt images at the dataset stopped training)
     datasets = [train_data_dir, validation_data_dir, test_data_dir]
