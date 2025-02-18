@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import logging
+import time
 from datetime import datetime as dt
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
@@ -130,8 +131,11 @@ class TrainModelsTF:
         self.check_path = os.path.join(self.results_path, self.app_name, 'best_model.h5')
         model_checkpoint = ModelCheckpoint(self.check_path, monitor='val_accuracy', mode='max', save_best_only=True)
         # Train the model
+        start_time = time.time()
         self.history = model.fit(self.train_generator, epochs=self.num_epochs, validation_data=self.validation_generator, callbacks=[model_checkpoint])
-
+        end_time = time.time()
+        self.training_time = end_time - start_time
+        
         self.save_learning_curves()
         test_metrics = self.summary_statistics()
 
@@ -174,6 +178,7 @@ class TrainModelsTF:
             target_size=self.input_size,
             batch_size=self.batch_size,
             class_mode='categorical',
+            shuffle=False
         )
 
         logging.info('Dataset preprocessed')
@@ -240,8 +245,11 @@ class TrainModelsTF:
         # classification repport
         y_true = self.test_generator.classes
 
-
+        start_time = time.time()
         predictions = best_model.predict(self.test_generator)
+        end_time = time.time()
+        self.inf_time = end_time - start_time
+        
         predicted_classes = np.argmax(predictions, axis=1)
         cr = classification_report(y_true, predicted_classes, target_names= self.test_generator.class_indices.keys(), output_dict=True)
 
@@ -262,6 +270,9 @@ class TrainModelsTF:
             'precision': sum(m['precision'] for m in class_metrics) / len(class_metrics),
             'recall': sum(m['recall'] for m in class_metrics) / len(class_metrics),
             'f1-score': sum(m['f1-score'] for m in class_metrics) / len(class_metrics),
+            'training_time': self.training_time,
+            'inference_time': self.inf_time,
+            'fps': self.test_generator.n / self.inf_time,
             'transfer learning': self.do_transfer,
             'epochs': self.num_epochs
         }
