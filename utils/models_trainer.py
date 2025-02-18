@@ -149,6 +149,8 @@ class TrainModelsTF:
         """
         # Data preprocessing (images must not be previously rescaled, as models preprocessors already implement it)
         train_datagen = ImageDataGenerator(
+            rotation_range=40,
+            brightness_range=(0.5, 1.5),
             shear_range=0.2,
             zoom_range=0.2,
             horizontal_flip=True,

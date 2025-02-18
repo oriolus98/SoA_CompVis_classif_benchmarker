@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import logging
+import time
 from datetime import datetime as dt
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
@@ -187,6 +188,8 @@ class TrainModelsTorch:
         train_loss = []
         train_accuracy= []
 
+        start_time = time.time()
+
         for epoch in range(self.num_epochs):
             logging.info(f"Epoch {epoch+1}\n-------------------------------")
             loss, acc = self.train_step(base_model, optimizer)
@@ -201,6 +204,8 @@ class TrainModelsTorch:
                 logging.info('Saving checkpoint')
                 torch.save(base_model.state_dict(), self.check_path)
 
+        end_time = time.time()
+        self.training_time = end_time - start_time
 
         self.save_learning_curves(train_accuracy, train_loss, test_accuracy, test_loss)
         test_metrics = self.summary_statistics()
@@ -297,6 +302,7 @@ class TrainModelsTorch:
         all_preds = []
         all_labels = []
 
+        start_time = time.time()
         best_model.eval()
         with torch.no_grad():
             for X, y in self.testDL:
@@ -305,6 +311,9 @@ class TrainModelsTorch:
                 _, predicted_classes = torch.max(predictions, 1)
                 all_preds.extend(predicted_classes.cpu().numpy())
                 all_labels.extend(y.cpu().numpy())
+
+        end_time = time.time()
+        self.inf_time = end_time - start_time
 
         all_preds = np.array(all_preds)
         all_labels = np.array(all_labels)
@@ -328,6 +337,9 @@ class TrainModelsTorch:
             'precision': sum(m['precision'] for m in class_metrics) / len(class_metrics),
             'recall': sum(m['recall'] for m in class_metrics) / len(class_metrics),
             'f1-score': sum(m['f1-score'] for m in class_metrics) / len(class_metrics),
+            'training_time': self.training_time,
+            'inference_time': self.inf_time,
+            'fps': len(self.testDL.dataset) / self.inf_time,
             'transfer learning': self.do_transfer,
             'epochs': self.num_epochs,
             'lr': self.lr,
