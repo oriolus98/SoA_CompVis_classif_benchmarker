@@ -1,5 +1,5 @@
 """
-    Load all trained models, predict class for each test image, aggregate all predictions
+    Load all trained models, including yolo models, predict class for each test image, aggregate all predictions
 
     Compute accuracy, mean precission and recall for each aggregate metric
     Available metrics: ['min', 'max','mean', 'sugeno', 'choquet','owa']
@@ -20,13 +20,15 @@ import json
 import importlib
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from ultralytics import YOLO
 
 
 
 # Directory containing the images
 images_dir = 'data/test'
-log_path = 'results/logs/aggregate_metrics'
+log_path = 'results/logs/aggregate_metrics_with_yolo'
 models_path = 'results'
+yolos_path = 'trained_yolos'
 framework = 'tensorflow'
 metrics = ['min', 'max','mean', 'sugeno', 'choquet','OWA_much', 'OWA_least', 'OWA_maj']
 
@@ -79,6 +81,14 @@ def plot_conf_matrix(true_classes, predicted_classes, agg_function, class_labels
     plt.close()
 
 
+yolol = YOLO(os.path.join(yolos_path, 'l.pt'))
+yolon = YOLO(os.path.join(yolos_path, 'n.pt'))
+yolom = YOLO(os.path.join(yolos_path, 'm.pt'))
+yolox = YOLO(os.path.join(yolos_path, 'x.pt'))
+yolos = YOLO(os.path.join(yolos_path, 's.pt'))
+
+yolos = [yolon, yolos, yolom, yolol, yolox]
+
 # Create an ImageDataGenerator
 datagen = ImageDataGenerator()
 
@@ -112,50 +122,49 @@ for experiment, model_info in config[framework].items():
 results = {}
 
 for metric in metrics:
-    try:
-        y_pred = []
-        true_labels = []
+    y_pred = []
+    true_labels = []
 
-        # Loop through all images in the directory
-        for (img, labels), img_path in zip(image_generator, image_generator.filenames):
-            assert img.shape == (1, 224, 224, 3), f"Unexpected input shape: {img.shape} for file: {img_path}"
-            true_labels.append(np.argmax(labels))
-            # Initialize list to store predictions for this image
-            image_predictions = []
+    # Loop through all images in the directory
+    for (img, labels), img_path in zip(image_generator, image_generator.filenames):
+        true_labels.append(np.argmax(labels))
+        # Initialize list to store predictions for this image
+        image_predictions = []
 
-            # Iterate over all models
-            for model, preprocessor in zip(models, preprocessors):
-                # Preprocess the image
-                preprocessed_img = preprocessor(img)
-                
-                prediction = model.predict(preprocessed_img)
-                # Append the prediction to the list of predictions for this model
-                image_predictions.append(prediction.flatten())  # Flatten prediction to (6,) array
-
-            # Convert predictions for this image to numpy array
-            image_predictions = np.array(image_predictions)
-            pred_batch = image_predictions.transpose()
-
-            agg = AggregatePredictions(metric= metric)
-            pred = agg.agg_pred(pred_batch)
-
-            # Determine the class with the highest mean probability
-            y_pred.append(np.argmax(pred))
+        # Iterate over all models
+        for model, preprocessor in zip(models, preprocessors):
+            # Preprocess the image
+            preprocessed_img = preprocessor(img)
+            
+            # Predict using the current model
+            prediction = model.predict(preprocessed_img)
+            
+            # Append the prediction to the list of predictions for this model
+            image_predictions.append(prediction.flatten())  # Flatten prediction to (6,) array
 
 
-        res = {
-                'accuracy': accuracy_score(true_labels, y_pred),
-                'precission': precision_score(true_labels, y_pred, average= 'macro'),
-                'recall': recall_score(true_labels, y_pred, average= 'macro'),
-                'f1': f1_score(true_labels, y_pred, average= 'macro')
-        }
-        
-        results[metric] = res
-        plot_conf_matrix(true_labels, y_pred, metric, class_labels)
+        for yolo_model in yolos:
+            yolo_preds = yolo_model(os.path.join(images_dir, img_path))
+            image_predictions.append(np.array(yolo_preds[0].probs.data))
 
-    except Exception as e:
-        logging.error(f"Error in metric {metric}: {e}")
-        continue
+        # Convert predictions for this image to numpy array
+        image_predictions = np.array(image_predictions)
+        pred_batch = image_predictions.transpose()
+
+        agg = AggregatePredictions(metric= metric)
+        pred = agg.agg_pred(pred_batch)
+
+        # Determine the class with the highest mean probability
+        y_pred.append(np.argmax(pred))
+
+    res = {
+            'accuracy': accuracy_score(true_labels, y_pred),
+            'precission': precision_score(true_labels, y_pred, average= 'macro'),
+            'recall': recall_score(true_labels, y_pred, average= 'macro'),
+            'f1': f1_score(true_labels, y_pred, average= 'macro')
+    }
+    results[metric] = res
+    plot_conf_matrix(true_labels, y_pred, metric, class_labels)
 
         
     

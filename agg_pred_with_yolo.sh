@@ -3,4 +3,4 @@
 
 source ~/miniconda3/bin/activate reciclai2
 
-python3 main.py
+python3 agg_pred_with_yolo.py

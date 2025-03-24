@@ -75,8 +75,14 @@ class AggregatePredictions:
             fm = np.array(range(img_batch, 0, -1)) / img_batch
             pred_batch = np.sort(pred_batch,axis=1)
             pred = np.max(np.minimum(pred_batch, fm), axis=1)
-        elif (self.agg == 'owa'):
+        elif (self.agg == 'OWA_much'):
             weights = self.owa_weights(img_batch, a=0.5, b=1)
+            pred = self.owa(pred_batch, weights, axis=1)
+        elif (self.agg == 'OWA_least'):
+            weights = self.owa_weights(img_batch, a=0, b=0.5)
+            pred = self.owa(pred_batch, weights, axis=1)
+        elif (self.agg == 'OWA_maj'):
+            weights = self.owa_weights(img_batch, a=0.3, b=0.8)
             pred = self.owa(pred_batch, weights, axis=1)
         else:
             print('Please introduce a valid aggregate metric from: ["min", "max", "mean", "choquet", "sugeno", "owa"]')
