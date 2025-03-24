@@ -80,14 +80,10 @@ def plot_conf_matrix(true_classes, predicted_classes, agg_function, class_labels
     plt.savefig(os.path.join(log_path, agg_function + 'conf_matrix.png'))
     plt.close()
 
-
-yolol = YOLO(os.path.join(yolos_path, 'l.pt'))
-yolon = YOLO(os.path.join(yolos_path, 'n.pt'))
-yolom = YOLO(os.path.join(yolos_path, 'm.pt'))
-yolox = YOLO(os.path.join(yolos_path, 'x.pt'))
-yolos = YOLO(os.path.join(yolos_path, 's.pt'))
-
-yolos = [yolon, yolos, yolom, yolol, yolox]
+yolos = []
+for yolo_model in os.listdir(yolos_path):
+    yolos.append(YOLO(os.path.join(yolos_path, yolo_model)))
+    
 
 # Create an ImageDataGenerator
 datagen = ImageDataGenerator()
