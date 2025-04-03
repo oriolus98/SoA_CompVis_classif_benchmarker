@@ -3,7 +3,41 @@ from PIL import Image, ImageDraw
 import os
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 
+
+
+def plot_conf_matrix(true_classes, predicted_classes, agg_function, class_labels):
+    conf_matrix = confusion_matrix(true_classes, predicted_classes)
+
+    # Calculate class-wise normalization factor
+    row_sums = conf_matrix.sum(axis=1, keepdims=True)
+
+    # Normalize confusion matrix
+    normalized_conf_matrix = conf_matrix / row_sums
+
+    # Plot normalized confusion matrix
+    plt.figure(figsize=(8, 8))  
+    plt.imshow(normalized_conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title('Normalized Confusion Matrix', fontsize=16)  # Increase title font size
+    plt.colorbar()
+    tick_marks = np.arange(len(class_labels))
+    plt.xticks(tick_marks, class_labels, rotation=90)  # Rotate x-axis labels by 90 degrees
+    plt.yticks(tick_marks, class_labels, fontsize=8)  # Adjust y-axis labels font size
+
+    # Add text annotations
+    for i in range(len(class_labels)):
+        for j in range(len(class_labels)):
+            plt.text(j, i, "{:.2f}".format(normalized_conf_matrix[i, j]), horizontalalignment='center',
+                    fontsize=8, color='white' if normalized_conf_matrix[i, j] > 0.5 else 'black')
+
+    plt.xlabel('Predicted Label', fontsize=12)  # Increase x-axis label font size
+    plt.ylabel('True Label', fontsize=12)  # Increase y-axis label font size
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(log_path, agg_function + 'conf_matrix.png'))
+    plt.close()
 
 
 class CheckImages:
