@@ -17,6 +17,7 @@ from tensorflow.keras.models import load_model
 from utils.tools import AggregatePredictions
 import pandas as pd
 import json
+from tqdm import tqdm
 import importlib
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -109,6 +110,20 @@ for experiment, model_info in config[framework].items():
     preprocessors.append(getattr(module, class_name))
     models.append(load_model(os.path.join(models_path, framework, experiment, 'best_model.h5')))
 
+num_models= len(models) 
+num_images = len(image_generator.filenames)
+num_classes = len(class_labels)
+
+## We are gonna save all predictions in a cache array so we don't need to recompute for every metric
+# Preallocate array for all predictions
+all_preds = np.zeros((num_images, num_classes, num_models))
+
+# Fill with TensorFlow model predictions
+for i, (model, preprocessor) in tqdm(enumerate(zip(models, preprocessors)), desc="TF Models"):
+    image_generator.reset()
+    for j, (img, _) in zip(range(num_images), image_generator):
+        all_preds[j,:,i] = model.predict(preprocessor(img), verbose=0)[0]
+
 results = {}
 
 for metric in metrics:
@@ -117,24 +132,9 @@ for metric in metrics:
         true_labels = []
 
         # Loop through all images in the directory
-        for (img, labels), img_path in zip(image_generator, image_generator.filenames):
-            assert img.shape == (1, 224, 224, 3), f"Unexpected input shape: {img.shape} for file: {img_path}"
+        for i, (img, labels) in zip(range(num_images), image_generator):
             true_labels.append(np.argmax(labels))
-            # Initialize list to store predictions for this image
-            image_predictions = []
-
-            # Iterate over all models
-            for model, preprocessor in zip(models, preprocessors):
-                # Preprocess the image
-                preprocessed_img = preprocessor(img)
-                
-                prediction = model.predict(preprocessed_img)
-                # Append the prediction to the list of predictions for this model
-                image_predictions.append(prediction.flatten())  # Flatten prediction to (6,) array
-
-            # Convert predictions for this image to numpy array
-            image_predictions = np.array(image_predictions)
-            pred_batch = image_predictions.transpose()
+            pred_batch = all_preds[i]
 
             agg = AggregatePredictions(metric= metric)
             pred = agg.agg_pred(pred_batch)
