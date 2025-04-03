@@ -14,13 +14,15 @@ import tensorflow as tf
 import tensorflow.keras.applications as apps
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import load_model
-from utils.tools import AggregatePredictions
+from utils.tools import AggregatePredictions, plot_conf_matrix
 import pandas as pd
 import json
+from tqdm import tqdm
 import importlib
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from ultralytics import YOLO
+from PIL import Image
 
 
 
@@ -47,38 +49,6 @@ logging.basicConfig(
     ]
 )
 
-
-
-def plot_conf_matrix(true_classes, predicted_classes, agg_function, class_labels):
-    conf_matrix = confusion_matrix(true_classes, predicted_classes)
-
-    # Calculate class-wise normalization factor
-    row_sums = conf_matrix.sum(axis=1, keepdims=True)
-
-    # Normalize confusion matrix
-    normalized_conf_matrix = conf_matrix / row_sums
-
-    # Plot normalized confusion matrix
-    plt.figure(figsize=(8, 8))  
-    plt.imshow(normalized_conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title('Normalized Confusion Matrix', fontsize=16)  # Increase title font size
-    plt.colorbar()
-    tick_marks = np.arange(len(class_labels))
-    plt.xticks(tick_marks, class_labels, rotation=90)  # Rotate x-axis labels by 90 degrees
-    plt.yticks(tick_marks, class_labels, fontsize=8)  # Adjust y-axis labels font size
-
-    # Add text annotations
-    for i in range(len(class_labels)):
-        for j in range(len(class_labels)):
-            plt.text(j, i, "{:.2f}".format(normalized_conf_matrix[i, j]), horizontalalignment='center',
-                    fontsize=8, color='white' if normalized_conf_matrix[i, j] > 0.5 else 'black')
-
-    plt.xlabel('Predicted Label', fontsize=12)  # Increase x-axis label font size
-    plt.ylabel('True Label', fontsize=12)  # Increase y-axis label font size
-
-    plt.tight_layout()
-    plt.savefig(os.path.join(log_path, agg_function + 'conf_matrix.png'))
-    plt.close()
 
 yolos = []
 for yolo_model in os.listdir(yolos_path):
@@ -115,6 +85,30 @@ for experiment, model_info in config[framework].items():
     preprocessors.append(getattr(module, class_name))
     models.append(load_model(os.path.join(models_path, framework, experiment, 'best_model.h5')))
 
+
+num_models= len(models) + len(yolos)
+num_images = len(image_generator.filenames)
+num_classes = len(class_labels)
+
+## We are gonna save all predictions in a cache array so we don't need to recompute for every metric
+# Preallocate array for all predictions
+all_preds = np.zeros((num_images, num_classes, num_models))
+
+# Fill with TensorFlow model predictions
+for i, (model, preprocessor) in tqdm(enumerate(zip(models, preprocessors)), desc="TF Models"):
+    image_generator.reset()
+    for j, (img, _) in zip(range(num_images), image_generator):
+        all_preds[j,:,i] = model.predict(preprocessor(img), verbose=0)[0]
+
+# Fill with YOLO model predictions 
+for i, yolo_model in tqdm(enumerate(yolos, start=len(models)), desc="YOLO Models"):
+    image_generator.reset()
+    for j, (img, _) in zip(range(num_images), image_generator):
+        imgp = Image.fromarray(img[0].astype('uint8'))
+        img_resized = imgp.resize((640, 640))
+        result = yolo_model(img_resized)
+        all_preds[i,j] = result[0].probs.data.cpu().numpy() 
+
 results = {}
 
 for metric in metrics:
@@ -122,30 +116,9 @@ for metric in metrics:
     true_labels = []
 
     # Loop through all images in the directory
-    for (img, labels), img_path in zip(image_generator, image_generator.filenames):
-        true_labels.append(np.argmax(labels))
-        # Initialize list to store predictions for this image
-        image_predictions = []
-
-        # Iterate over all models
-        for model, preprocessor in zip(models, preprocessors):
-            # Preprocess the image
-            preprocessed_img = preprocessor(img)
-            
-            # Predict using the current model
-            prediction = model.predict(preprocessed_img)
-            
-            # Append the prediction to the list of predictions for this model
-            image_predictions.append(prediction.flatten())  # Flatten prediction to (6,) array
-
-
-        for yolo_model in yolos:
-            yolo_preds = yolo_model(os.path.join(images_dir, img_path))
-            image_predictions.append(np.array(yolo_preds[0].probs.data))
-
-        # Convert predictions for this image to numpy array
-        image_predictions = np.array(image_predictions)
-        pred_batch = image_predictions.transpose()
+        for i, (_, labels) in zip(range(num_images), image_generator):
+            true_labels.append(np.argmax(labels))
+            pred_batch = all_preds[i]
 
         agg = AggregatePredictions(metric= metric)
         pred = agg.agg_pred(pred_batch)
