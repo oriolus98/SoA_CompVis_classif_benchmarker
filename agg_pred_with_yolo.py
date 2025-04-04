@@ -107,7 +107,7 @@ for i, yolo_model in tqdm(enumerate(yolos, start=len(models)), desc="YOLO Models
         imgp = Image.fromarray(img[0].astype('uint8'))
         img_resized = imgp.resize((640, 640))
         result = yolo_model(img_resized)
-        all_preds[i,j] = result[0].probs.data.cpu().numpy() 
+        all_preds[j,:,i] = result[0].probs.data.cpu().numpy() 
 
 results = {}
 
