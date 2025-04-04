@@ -112,28 +112,32 @@ for i, yolo_model in tqdm(enumerate(yolos, start=len(models)), desc="YOLO Models
 results = {}
 
 for metric in metrics:
-    y_pred = []
-    true_labels = []
-
-    # Loop through all images in the directory
+    try:
+        y_pred = []
+        true_labels = []
+    
+        # Loop through all images in the directory
         for i, (_, labels) in zip(range(num_images), image_generator):
             true_labels.append(np.argmax(labels))
             pred_batch = all_preds[i]
-
-        agg = AggregatePredictions(metric= metric)
-        pred = agg.agg_pred(pred_batch)
-
-        # Determine the class with the highest mean probability
-        y_pred.append(np.argmax(pred))
-
-    res = {
-            'accuracy': accuracy_score(true_labels, y_pred),
-            'precission': precision_score(true_labels, y_pred, average= 'macro'),
-            'recall': recall_score(true_labels, y_pred, average= 'macro'),
-            'f1': f1_score(true_labels, y_pred, average= 'macro')
-    }
-    results[metric] = res
-    plot_conf_matrix(true_labels, y_pred, metric, class_labels)
+    
+            agg = AggregatePredictions(metric= metric)
+            pred = agg.agg_pred(pred_batch)
+    
+            # Determine the class with the highest mean probability
+            y_pred.append(np.argmax(pred))
+    
+        res = {
+                'accuracy': accuracy_score(true_labels, y_pred),
+                'precission': precision_score(true_labels, y_pred, average= 'macro'),
+                'recall': recall_score(true_labels, y_pred, average= 'macro'),
+                'f1': f1_score(true_labels, y_pred, average= 'macro')
+        }
+        results[metric] = res
+        plot_conf_matrix(true_labels, y_pred, metric, class_labels)
+    except Exception as e:
+        logging.error(f"Error in metric {metric}: {e}")
+        continue
 
         
     
